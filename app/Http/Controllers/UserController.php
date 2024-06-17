@@ -81,9 +81,7 @@ class UserController extends Controller
 
             $user = User::where('email', $request->email)->first();
 
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                return response()->json($this->renderMessage('Error', 'Invalid credentials'), Response::HTTP_UNAUTHORIZED);
-            }
+            if (!$user || !Hash::check($request->password, $user->password)) return response()->json($this->renderMessage('Error', 'Invalid credentials'), Response::HTTP_UNAUTHORIZED);
 
             $token = $user->createToken('auth_token', ['*'], now()->addDays(2))->plainTextToken;
 
@@ -110,6 +108,24 @@ class UserController extends Controller
             $render_data = ['user' => $user];
 
             return response()->json($this->renderMessage('Authenticated', 'User is authenticate.', $render_data));
+        } catch (\Throwable $th) {
+            return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function logout(Request $request) 
+    {
+        try {
+
+            $request->validate([
+                'token' => 'required',
+            ]);
+
+            $arr_token = explode('|', $request->token);
+
+            PersonalAccessToken::where('id', '=', $arr_token[0])->delete();
+
+            return response()->json($this->renderMessage('Deleted Token', 'Token is deleted successfully.'));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }

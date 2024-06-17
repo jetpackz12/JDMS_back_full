@@ -8,4 +8,6 @@ Route::post('/v1/login', [UserController::class, 'login']);
 
 Route::post('/v1/checkAuth', [UserController::class, 'checkAuth'])->middleware('auth:sanctum');
 
+Route::post('/v1/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
+
 Route::get('/v1/user', [UserController::class, 'index'])->middleware('auth:sanctum');
