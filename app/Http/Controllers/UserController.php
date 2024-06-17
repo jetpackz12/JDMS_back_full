@@ -11,9 +11,6 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $render_data = [
@@ -21,53 +18,6 @@ class UserController extends Controller
         ];
 
         return response()->json($render_data);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 
     public function login(Request $request)
@@ -126,6 +76,31 @@ class UserController extends Controller
             PersonalAccessToken::where('id', '=', $arr_token[0])->delete();
 
             return response()->json($this->renderMessage('Deleted Token', 'Token is deleted successfully.'));
+        } catch (\Throwable $th) {
+            return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function changePassword(Request $request, $id)
+    {
+        try {
+
+            $request->validate([
+                'currentPassword' => 'required',
+                'newPassword' => 'required',
+                'confirmPassword' => 'required',
+            ]);
+
+            if($request->newPassword !== $request->confirmPassword) return response()->json($this->renderMessage('Error', 'New password and confirm password must be the same.'), Response::HTTP_UNAUTHORIZED); 
+
+            $user = User::where('id', '=', $id)->first();
+
+            if (!$user || !Hash::check($request->currentPassword, $user->password)) return response()->json($this->renderMessage('Error', 'Current password is invalid.'), Response::HTTP_UNAUTHORIZED);
+
+            $user->password = Hash::make($request->newPassword);
+            $user->save();
+
+            return response()->json($this->renderMessage('Updated Password', 'Password is updated successfully.'));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
