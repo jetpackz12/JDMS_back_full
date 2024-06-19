@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserController;
@@ -56,3 +57,20 @@ Route::delete('/v1/tenant/destroy/{id}', [TenantController::class, 'destroy'])->
 
 // Tenant Delete Datas
 Route::post('/v1/tenant/destroys', [TenantController::class, 'destroys'])->middleware('auth:sanctum');
+
+// Guests
+
+// Guests Lists
+Route::get('/v1/guest/index', [GuestController::class, 'index'])->middleware('auth:sanctum');
+
+// Guests Store New Data
+Route::post('/v1/guest/store', [GuestController::class, 'store'])->middleware('auth:sanctum');
+
+// Guests Update Data
+Route::put('/v1/guest/update/{id}', [GuestController::class, 'update'])->middleware('auth:sanctum');
+
+// Guests Delete Data
+Route::delete('/v1/guest/destroy/{id}', [GuestController::class, 'destroy'])->middleware('auth:sanctum');
+
+// Guests Delete Datas
+Route::post('/v1/guest/destroys', [GuestController::class, 'destroys'])->middleware('auth:sanctum');
