@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 class RoomController extends Controller
 {
 
+    const DISABLE = 0;
+    const ENABLED = 1;
+
     public function index()
     {
         $render_data = [
@@ -64,11 +67,12 @@ class RoomController extends Controller
     public function destroy(Request $request, $id)
     {
         try {
-            $status = $request->status === 1 ? 'disable' : 'enabled';
 
             $room = Room::where('id', '=', $id)->first();
-            $room->status = $request->status === 1 ? 0 : 1;
+            $room->status = $request->status === self::ENABLED ? self::DISABLE : self::ENABLED;
             $room->save();
+
+            $status = $request->status === self::ENABLED ? 'disable' : 'enabled';
 
             return response()->json($this->renderMessage('Success', 'You have successfully ' . $status . ' this room.', $room));
         } catch (\Throwable $th) {
