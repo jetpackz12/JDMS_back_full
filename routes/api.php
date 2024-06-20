@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ElectricityBillingPaymentController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\TenantController;
@@ -89,3 +90,17 @@ Route::put('/v1/waterBillingPayment/update/{id}', [WaterBillingPaymentController
 
 // Water Billing Payment Date Filter
 Route::post('/v1/waterBillingPayment/dateFilter', [WaterBillingPaymentController::class, 'dateFilter'])->middleware('auth:sanctum');
+
+// Electricity Billing Payment
+
+// Electricity Billing Payment Lists
+Route::get('/v1/electricityBillingPayment/index', [ElectricityBillingPaymentController::class, 'index'])->middleware('auth:sanctum');
+
+// Electricity Billing Payment Store New Data
+Route::post('/v1/electricityBillingPayment/store', [ElectricityBillingPaymentController::class, 'store'])->middleware('auth:sanctum');
+
+// Electricity Billing Payment Update Data
+Route::put('/v1/electricityBillingPayment/update/{id}', [ElectricityBillingPaymentController::class, 'update'])->middleware('auth:sanctum');
+
+// Electricity Billing Payment Date Filter
+Route::post('/v1/electricityBillingPayment/dateFilter', [ElectricityBillingPaymentController::class, 'dateFilter'])->middleware('auth:sanctum');
