@@ -4,6 +4,7 @@ use App\Http\Controllers\GuestController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WaterBillingPaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -58,19 +59,33 @@ Route::delete('/v1/tenant/destroy/{id}', [TenantController::class, 'destroy'])->
 // Tenant Delete Datas
 Route::post('/v1/tenant/destroys', [TenantController::class, 'destroys'])->middleware('auth:sanctum');
 
-// Guests
+// Guest
 
-// Guests Lists
+// Guest Lists
 Route::get('/v1/guest/index', [GuestController::class, 'index'])->middleware('auth:sanctum');
 
-// Guests Store New Data
+// Guest Store New Data
 Route::post('/v1/guest/store', [GuestController::class, 'store'])->middleware('auth:sanctum');
 
-// Guests Update Data
+// Guest Update Data
 Route::put('/v1/guest/update/{id}', [GuestController::class, 'update'])->middleware('auth:sanctum');
 
-// Guests Delete Data
+// Guest Delete Data
 Route::delete('/v1/guest/destroy/{id}', [GuestController::class, 'destroy'])->middleware('auth:sanctum');
 
-// Guests Delete Datas
+// Guest Delete Datas
 Route::post('/v1/guest/destroys', [GuestController::class, 'destroys'])->middleware('auth:sanctum');
+
+// Water Billing Payment
+
+// Water Billing Payment Lists
+Route::get('/v1/waterBillingPayment/index', [WaterBillingPaymentController::class, 'index'])->middleware('auth:sanctum');
+
+// Water Billing Payment Store New Data
+Route::post('/v1/waterBillingPayment/store', [WaterBillingPaymentController::class, 'store'])->middleware('auth:sanctum');
+
+// Water Billing Payment Update Data
+Route::put('/v1/waterBillingPayment/update/{id}', [WaterBillingPaymentController::class, 'update'])->middleware('auth:sanctum');
+
+// Water Billing Payment Date Filter
+Route::post('/v1/waterBillingPayment/dateFilter', [WaterBillingPaymentController::class, 'dateFilter'])->middleware('auth:sanctum');
