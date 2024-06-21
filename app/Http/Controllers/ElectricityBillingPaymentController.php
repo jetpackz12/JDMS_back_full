@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ElectricityBillingPayment;
 use Carbon\Carbon;
+use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use App\Models\ElectricityBillingPayment;
 
 class ElectricityBillingPaymentController extends Controller
 {
@@ -26,6 +27,7 @@ class ElectricityBillingPaymentController extends Controller
     public function store(Request $request)
     {
         try {
+
             $form_data = $request->validate([
                 'tenant_id' => 'required',
                 'unit_con' => 'required',
@@ -44,6 +46,16 @@ class ElectricityBillingPaymentController extends Controller
             }
 
             $electricityBillingPayment = ElectricityBillingPayment::create($form_data);
+
+            $successElectricityBillingPayment = ElectricityBillingPayment::join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('electricity_billing_payments.id', '=', $electricityBillingPayment->id)->first();
+
+            $form_data = [
+                'transaction' => 2,
+                'billing_payment_id' => $electricityBillingPayment->id,
+                'description' => $successElectricityBillingPayment,
+            ];
+
+            Report::create($form_data);
 
             return response()->json($this->renderMessage('Success', 'You have successfully added new electricity billing payment.', $electricityBillingPayment));
         } catch (\Throwable $th) {
@@ -74,7 +86,17 @@ class ElectricityBillingPaymentController extends Controller
 
             $electricityBillingPayment = ElectricityBillingPayment::findOrFail($id);
 
-            $electricityBillingPayment->update($form_data);
+            $electricityBillingPayment = $electricityBillingPayment->update($form_data);
+
+            $updatedElectricityBillingPayment = ElectricityBillingPayment::join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('electricity_billing_payments.id', '=', $id)->first();
+
+            $form_data = [
+                'transaction' => 2,
+                'billing_payment_id' => $id,
+                'description' => $updatedElectricityBillingPayment,
+            ];
+
+            Report::where('transaction', '=', 2)->where('billing_payment_id', '=', $id)->update($form_data);
 
             return response()->json($this->renderMessage('Success', 'You have successfully updated this electricity billing payment.', $electricityBillingPayment));
         } catch (\Throwable $th) {

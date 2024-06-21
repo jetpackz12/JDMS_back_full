@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ElectricityBillingPaymentController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserController;
@@ -104,3 +105,11 @@ Route::put('/v1/electricityBillingPayment/update/{id}', [ElectricityBillingPayme
 
 // Electricity Billing Payment Date Filter
 Route::post('/v1/electricityBillingPayment/dateFilter', [ElectricityBillingPaymentController::class, 'dateFilter'])->middleware('auth:sanctum');
+
+// Reports Payment
+
+// Reports Payment Lists
+Route::get('/v1/report/index', [ReportController::class, 'index'])->middleware('auth:sanctum');
+
+// Reports Payment Date Filter
+Route::post('/v1/report/dateFilter', [ReportController::class, 'dateFilter'])->middleware('auth:sanctum');
