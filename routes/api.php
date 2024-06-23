@@ -15,101 +15,87 @@ use Illuminate\Support\Facades\Route;
 // User Login
 Route::post('/v1/login', [UserController::class, 'login']);
 
-// User Check Authentication
-Route::post('/v1/checkAuth', [UserController::class, 'checkAuth'])->middleware('auth:sanctum');
-
-// User Logout
-Route::post('/v1/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
-
-// User Change Password
-Route::put('/v1/changePassword/{id}', [UserController::class, 'changePassword'])->middleware('auth:sanctum');
-
-// User Lists
-Route::get('/v1/user', [UserController::class, 'index'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->prefix('v1/user')->group(function () {
+    // User Check Authentication
+    Route::post('/checkAuth', [UserController::class, 'checkAuth']);
+    // User Logout
+    Route::post('/logout', [UserController::class, 'logout']);
+    // User Change Password
+    Route::put('/changePassword/{id}', [UserController::class, 'changePassword']);
+    // User Lists
+    Route::get('/user', [UserController::class, 'index']);
+});
 
 // Room
-
-// Room Lists
-Route::get('/v1/room/index', [RoomController::class, 'index'])->middleware('auth:sanctum');
-
-// Room Store New Data
-Route::post('/v1/room/store', [RoomController::class, 'store'])->middleware('auth:sanctum');
-
-// Room Update Data
-Route::put('/v1/room/update/{id}', [RoomController::class, 'update'])->middleware('auth:sanctum');
-
-// Room Delete Data
-Route::put('/v1/room/destroy/{id}', [RoomController::class, 'destroy'])->middleware('auth:sanctum');
-
-// Room Upload Image
-Route::post('/v1/uploadImage', [RoomController::class, 'uploadImage'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->prefix('v1/room')->group(function () {
+    // Room Lists
+    Route::get('/index', [RoomController::class, 'index']);
+    // Room Store New Data
+    Route::post('/store', [RoomController::class, 'store']);
+    // Room Update Data
+    Route::put('/update/{id}', [RoomController::class, 'update']);
+    // Room Delete Data
+    Route::put('/destroy/{id}', [RoomController::class, 'destroy']);
+    // Room Upload Image
+    Route::post('/uploadImage', [RoomController::class, 'uploadImage']);
+});
 
 // Tenant
-
-// Tenant Lists
-Route::get('/v1/tenant/index', [TenantController::class, 'index'])->middleware('auth:sanctum');
-
-// Tenant Store New Data
-Route::post('/v1/tenant/store', [TenantController::class, 'store'])->middleware('auth:sanctum');
-
-// Tenant Update Data
-Route::put('/v1/tenant/update/{id}', [TenantController::class, 'update'])->middleware('auth:sanctum');
-
-// Tenant Delete Data
-Route::delete('/v1/tenant/destroy/{id}', [TenantController::class, 'destroy'])->middleware('auth:sanctum');
-
-// Tenant Delete Datas
-Route::post('/v1/tenant/destroys', [TenantController::class, 'destroys'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->prefix('v1/tenant')->group(function () {
+    // Tenant Lists
+    Route::get('/index', [TenantController::class, 'index']);
+    // Tenant Store New Data
+    Route::post('/store', [TenantController::class, 'store']);
+    // Tenant Update Data
+    Route::put('/update/{id}', [TenantController::class, 'update']);
+    // Tenant Delete Data
+    Route::delete('/destroy/{id}', [TenantController::class, 'destroy']);
+    // Tenant Delete Datas
+    Route::post('/destroys', [TenantController::class, 'destroys']);
+});
 
 // Guest
-
-// Guest Lists
-Route::get('/v1/guest/index', [GuestController::class, 'index'])->middleware('auth:sanctum');
-
-// Guest Store New Data
-Route::post('/v1/guest/store', [GuestController::class, 'store'])->middleware('auth:sanctum');
-
-// Guest Update Data
-Route::put('/v1/guest/update/{id}', [GuestController::class, 'update'])->middleware('auth:sanctum');
-
-// Guest Delete Data
-Route::delete('/v1/guest/destroy/{id}', [GuestController::class, 'destroy'])->middleware('auth:sanctum');
-
-// Guest Delete Datas
-Route::post('/v1/guest/destroys', [GuestController::class, 'destroys'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->prefix('v1/guest')->group(function () {
+    // Guest Lists
+    Route::get('/index', [GuestController::class, 'index']);
+    // Guest Store New Data
+    Route::post('/store', [GuestController::class, 'store']);
+    // Guest Update Data
+    Route::put('/update/{id}', [GuestController::class, 'update']);
+    // Guest Delete Data
+    Route::delete('/destroy/{id}', [GuestController::class, 'destroy']);
+    // Guest Delete Datas
+    Route::post('/destroys', [GuestController::class, 'destroys']);
+});
 
 // Water Billing Payment
-
-// Water Billing Payment Lists
-Route::get('/v1/waterBillingPayment/index', [WaterBillingPaymentController::class, 'index'])->middleware('auth:sanctum');
-
-// Water Billing Payment Store New Data
-Route::post('/v1/waterBillingPayment/store', [WaterBillingPaymentController::class, 'store'])->middleware('auth:sanctum');
-
-// Water Billing Payment Update Data
-Route::put('/v1/waterBillingPayment/update/{id}', [WaterBillingPaymentController::class, 'update'])->middleware('auth:sanctum');
-
-// Water Billing Payment Date Filter
-Route::post('/v1/waterBillingPayment/dateFilter', [WaterBillingPaymentController::class, 'dateFilter'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->prefix('v1/waterBillingPayment')->group(function () {
+    // Water Billing Payment Lists
+    Route::get('/index', [WaterBillingPaymentController::class, 'index']);
+    // Water Billing Payment Store New Data
+    Route::post('/store', [WaterBillingPaymentController::class, 'store']);
+    // Water Billing Payment Update Data
+    Route::put('/update/{id}', [WaterBillingPaymentController::class, 'update']);
+    // Water Billing Payment Date Filter
+    Route::post('/dateFilter', [WaterBillingPaymentController::class, 'dateFilter']);
+});
 
 // Electricity Billing Payment
+Route::middleware('auth:sanctum')->prefix('v1/electricityBillingPayment')->group(function () {
+    // Electricity Billing Payment Lists
+    Route::get('/index', [ElectricityBillingPaymentController::class, 'index']);
+    // Electricity Billing Payment Store New Data
+    Route::post('/store', [ElectricityBillingPaymentController::class, 'store']);
+    // Electricity Billing Payment Update Data
+    Route::put('/update/{id}', [ElectricityBillingPaymentController::class, 'update']);
+    // Electricity Billing Payment Date Filter
+    Route::post('/dateFilter', [ElectricityBillingPaymentController::class, 'dateFilter']);
+});
 
-// Electricity Billing Payment Lists
-Route::get('/v1/electricityBillingPayment/index', [ElectricityBillingPaymentController::class, 'index'])->middleware('auth:sanctum');
-
-// Electricity Billing Payment Store New Data
-Route::post('/v1/electricityBillingPayment/store', [ElectricityBillingPaymentController::class, 'store'])->middleware('auth:sanctum');
-
-// Electricity Billing Payment Update Data
-Route::put('/v1/electricityBillingPayment/update/{id}', [ElectricityBillingPaymentController::class, 'update'])->middleware('auth:sanctum');
-
-// Electricity Billing Payment Date Filter
-Route::post('/v1/electricityBillingPayment/dateFilter', [ElectricityBillingPaymentController::class, 'dateFilter'])->middleware('auth:sanctum');
-
-// Reports Payment
-
-// Reports Payment Lists
-Route::get('/v1/report/index', [ReportController::class, 'index'])->middleware('auth:sanctum');
-
-// Reports Payment Date Filter
-Route::post('/v1/report/dateFilter', [ReportController::class, 'dateFilter'])->middleware('auth:sanctum');
+// Reports
+Route::middleware('auth:sanctum')->prefix('v1/report')->group(function () {
+    // Reports Lists
+    Route::get('/index', [ReportController::class, 'index']);
+    // Reports Date Filter
+    Route::post('/dateFilter', [ReportController::class, 'dateFilter']);
+});
