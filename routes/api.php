@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ElectricityBillingPaymentController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\TenantController;
@@ -24,6 +25,12 @@ Route::middleware('auth:sanctum')->prefix('v1/user')->group(function () {
     Route::put('/changePassword/{id}', [UserController::class, 'changePassword']);
     // User Lists
     Route::get('/user', [UserController::class, 'index']);
+});
+
+// Home
+Route::middleware('auth:sanctum')->prefix('v1/home')->group(function () {
+    // Home Data
+    Route::get('/index', [HomeController::class, 'index']);
 });
 
 // Room
