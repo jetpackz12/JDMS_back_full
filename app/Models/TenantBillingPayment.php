@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class TenantBillingPayment extends Model
+{
+    use HasFactory;
+    protected $fillable = [
+        'tenant_id',
+        'water_billing_payment_id',
+        'electricity_billing_payment_id',
+    ];
+}

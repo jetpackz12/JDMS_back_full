@@ -5,6 +5,7 @@ use App\Http\Controllers\GuestController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\TenantBillingPaymentController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WaterBillingPaymentController;
@@ -97,6 +98,16 @@ Route::middleware('auth:sanctum')->prefix('v1/electricityBillingPayment')->group
     Route::put('/update/{id}', [ElectricityBillingPaymentController::class, 'update']);
     // Electricity Billing Payment Date Filter
     Route::post('/dateFilter', [ElectricityBillingPaymentController::class, 'dateFilter']);
+});
+
+// Tenent Billing Payment
+Route::middleware('auth:sanctum')->prefix('v1/tenantBillingPayment')->group(function () {
+    // Tenent Billing Payment Lists
+    Route::get('/index', [TenantBillingPaymentController::class, 'index']);
+    // Tenent Billing Payment Update Status
+    Route::put('/updateStatus/{id}', [TenantBillingPaymentController::class, 'updateStatus']);
+    // Tenent Billing Payment Date Filter
+    Route::post('/dateFilter', [TenantBillingPaymentController::class, 'dateFilter']);
 });
 
 // Reports

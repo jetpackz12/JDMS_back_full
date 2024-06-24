@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Report;
 use App\Models\Tenant;
+use App\Models\TenantBillingPayment;
 use App\Models\WaterBillingPayment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -41,13 +42,35 @@ class WaterBillingPaymentController extends Controller
             $month = Carbon::now()->format('m');
             $year = Carbon::now()->format('Y');
 
+            echo $month;
+            echo $year;
+
             $existingBilling = WaterBillingPayment::where('tenant_id', '=', $request->tenant_id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
+
+            echo $existingBilling;
 
             if ($existingBilling) {
                 return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
             }
 
             $waterBillingPayment = WaterBillingPayment::create($form_data);
+            
+            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.tenant_id', '=', $request->tenant_id)->where('tenant_billing_payments.water_billing_payment_id', '=', null)->first();
+
+            if ($tenantBillingPayment) {
+
+                $tenantBillingPayment->water_billing_payment_id = $waterBillingPayment->id;
+                $tenantBillingPayment->save();
+                
+            } else {
+
+                $form_data = [
+                    'tenant_id' => $request->tenant_id,
+                    'water_billing_payment_id' => $waterBillingPayment->id,
+                ];
+    
+                TenantBillingPayment::create($form_data);
+            }
 
             $successWaterBillingPayment = WaterBillingPayment::join('tenants', 'water_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('water_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('water_billing_payments.id', '=', $waterBillingPayment->id)->first();
 

@@ -7,6 +7,7 @@ use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use App\Models\TenantBillingPayment;
 use App\Models\ElectricityBillingPayment;
 
 class ElectricityBillingPaymentController extends Controller
@@ -46,6 +47,23 @@ class ElectricityBillingPaymentController extends Controller
             }
 
             $electricityBillingPayment = ElectricityBillingPayment::create($form_data);
+            
+            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.tenant_id', '=', $request->tenant_id)->where('tenant_billing_payments.electricity_billing_payment_id', '=', null)->first();
+
+            if ($tenantBillingPayment) {
+
+                $tenantBillingPayment->electricity_billing_payment_id = $electricityBillingPayment->id;
+                $tenantBillingPayment->save();
+                
+            } else {
+
+                $form_data = [
+                    'tenant_id' => $request->tenant_id,
+                    'electricity_billing_payment_id' => $electricityBillingPayment->id,
+                ];
+    
+                TenantBillingPayment::create($form_data);
+            }
 
             $successElectricityBillingPayment = ElectricityBillingPayment::join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('electricity_billing_payments.id', '=', $electricityBillingPayment->id)->first();
 
