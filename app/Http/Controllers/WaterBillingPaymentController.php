@@ -42,9 +42,6 @@ class WaterBillingPaymentController extends Controller
             $month = Carbon::now()->format('m');
             $year = Carbon::now()->format('Y');
 
-            echo $month;
-            echo $year;
-
             $existingBilling = WaterBillingPayment::where('tenant_id', '=', $request->tenant_id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
 
             echo $existingBilling;
