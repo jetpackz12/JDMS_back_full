@@ -36,7 +36,6 @@ class TenantController extends Controller
                 'last_name' => 'required',
                 'address' => 'required',
                 'contact_number' => 'required',
-                'deposit' => 'required',
                 'advance' => 'required',
             ]);
 
@@ -63,7 +62,6 @@ class TenantController extends Controller
                 'last_name' => 'required',
                 'address' => 'required',
                 'contact_number' => 'required',
-                'deposit' => 'required',
                 'advance' => 'required',
             ]);
 

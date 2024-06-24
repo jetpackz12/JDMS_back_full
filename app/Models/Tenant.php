@@ -16,7 +16,6 @@ class Tenant extends Model
         'last_name',
         'address',
         'contact_number',
-        'deposit',
         'advance',
         'status',
     ];

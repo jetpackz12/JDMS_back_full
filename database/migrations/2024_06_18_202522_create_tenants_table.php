@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('last_name');
             $table->text('address');
             $table->text('contact_number');
-            $table->decimal('deposit', 9, 2);
             $table->decimal('advance', 9, 2);
             $table->integer('status')->default(1);
             $table->timestamps();
