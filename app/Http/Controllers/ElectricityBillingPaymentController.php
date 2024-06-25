@@ -37,10 +37,7 @@ class ElectricityBillingPaymentController extends Controller
                 'date_issue' => 'required',
             ]);
 
-            $month = Carbon::now()->format('m');
-            $year = Carbon::now()->format('Y');
-
-            $existingBilling = ElectricityBillingPayment::where('tenant_id', '=', $request->tenant_id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
+            $existingBilling = ElectricityBillingPayment::where('tenant_id', '=', $request->tenant_id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
 
             if ($existingBilling) {
                 return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
@@ -93,10 +90,7 @@ class ElectricityBillingPaymentController extends Controller
                 'date_issue' => 'required',
             ]);
 
-            $month = Carbon::now()->format('m');
-            $year = Carbon::now()->format('Y');
-
-            $existingBilling = ElectricityBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('id', '!=', $id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
+            $existingBilling = ElectricityBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('id', '!=', $id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
 
             if ($existingBilling) {
                 return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
@@ -131,7 +125,7 @@ class ElectricityBillingPaymentController extends Controller
             ]);
 
             $render_data = [
-                'electricityBillingPayment' => DB::table('electricity_billing_payments')->join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS full_name"), 'rooms.room')->whereBetween('date_issue', $request->dateFilter)->get(),
+                'electricityBillingPayment' => DB::table('electricity_billing_payments')->join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->whereBetween('date_issue', $request->dateFilter)->get(),
                 'tenants' => DB::table('tenants')->select('tenants.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS full_name"))->get(),
             ];
 
