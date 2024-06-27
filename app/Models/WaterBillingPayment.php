@@ -10,7 +10,7 @@ class WaterBillingPayment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'room_id',
         'prev_read',
         'pres_read',
         'amount',

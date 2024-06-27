@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 class WaterBillingPaymentController extends Controller
 {
@@ -21,8 +22,8 @@ class WaterBillingPaymentController extends Controller
         $month = Carbon::now()->format('m');
 
         $render_data = [
-            'waterBillingPayment' => DB::table('water_billing_payments')->join('tenants', 'water_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('water_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->whereMonth('date_issue', '=', $month)->get(),
-            'tenants' => DB::table('tenants')->select('tenants.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS full_name"))->get(),
+            'waterBillingPayment' => DB::table('water_billing_payments')->join('rooms', 'water_billing_payments.room_id', '=', 'rooms.id')->select('water_billing_payments.*','rooms.room')->whereMonth('date_issue', '=', $month)->get(),
+            'rooms' => DB::table('rooms')->get(),
         ];
 
         return response()->json($render_data);
@@ -33,7 +34,7 @@ class WaterBillingPaymentController extends Controller
         try {
 
             $form_data = $request->validate([
-                'tenant_id' => 'required',
+                'room_id' => 'required',
                 'prev_read' => 'required',
                 'pres_read' => 'required',
                 'amount' => 'required',
@@ -41,13 +42,16 @@ class WaterBillingPaymentController extends Controller
                 'date_issue' => 'required',
             ]);
 
-            $existingBilling = WaterBillingPayment::where('tenant_id', '=', $request->tenant_id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
+            $month = Carbon::parse($request->date_issue)->format('m');
+            $year = Carbon::parse($request->date_issue)->format('Y');
+
+            $existingBilling = WaterBillingPayment::where('room_id', '=', $request->room_id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
 
             if ($existingBilling) return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
 
             $waterBillingPayment = WaterBillingPayment::create($form_data);
 
-            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.tenant_id', '=', $request->tenant_id)->where('tenant_billing_payments.water_billing_payment_id', '=', null)->first();
+            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.room_id', '=', $request->room_id)->where('tenant_billing_payments.water_billing_payment_id', '=', null)->first();
 
             if ($tenantBillingPayment) {
 
@@ -56,14 +60,14 @@ class WaterBillingPaymentController extends Controller
             } else {
 
                 $form_data = [
-                    'tenant_id' => $request->tenant_id,
+                    'room_id' => $request->room_id,
                     'water_billing_payment_id' => $waterBillingPayment->id,
                 ];
 
                 TenantBillingPayment::create($form_data);
             }
 
-            $successWaterBillingPayment = WaterBillingPayment::join('tenants', 'water_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('water_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('water_billing_payments.id', '=', $waterBillingPayment->id)->first();
+            $successWaterBillingPayment = WaterBillingPayment::join('rooms', 'water_billing_payments.room_id', '=', 'rooms.id')->select('water_billing_payments.*', 'rooms.room')->where('water_billing_payments.id', '=', $waterBillingPayment->id)->first();
 
             $form_data = [
                 'transaction' => 1,
@@ -73,7 +77,7 @@ class WaterBillingPaymentController extends Controller
 
             Report::create($form_data);
 
-            return response()->json($this->renderMessage('Success', 'You have successfully added new water billing payment.', $waterBillingPayment));
+            return response()->json($this->renderMessage('Success', 'You have successfully added new water billing payment.', $existingBilling));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -84,7 +88,7 @@ class WaterBillingPaymentController extends Controller
         try {
 
             $form_data = $request->validate([
-                'tenant_id' => 'required',
+                'room_id' => 'required',
                 'prev_read' => 'required',
                 'pres_read' => 'required',
                 'amount' => 'required',
@@ -92,19 +96,22 @@ class WaterBillingPaymentController extends Controller
                 'date_issue' => 'required',
             ]);
 
-            $existingBilling = WaterBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('id', '!=', $id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
+            $month = Carbon::parse($request->date_issue)->format('m');
+            $year = Carbon::parse($request->date_issue)->format('Y');
+
+            $existingBilling = WaterBillingPayment::where('room_id', '=', $request->room_id)->where('id', '!=', $id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
 
             if ($existingBilling) return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
 
             $waterBillingPayment = WaterBillingPayment::findOrFail($id);
 
-            $tenantBillingPayment = TenantBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
+            $tenantBillingPayment = TenantBillingPayment::where('room_id', '=', $request->room_id)->where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
 
             if ($tenantBillingPayment) return response()->json($this->renderMessage('Error', 'You cannot update this billing because the tenant has already paid it.'), Response::HTTP_BAD_REQUEST);
 
             $waterBillingPayment = $waterBillingPayment->update($form_data);
 
-            $updatedWaterBillingPayment = WaterBillingPayment::join('tenants', 'water_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('water_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('water_billing_payments.id', '=', $id)->first();
+            $updatedWaterBillingPayment = WaterBillingPayment::join('rooms', 'water_billing_payments.room_id', '=', 'rooms.id')->select('water_billing_payments.*', 'rooms.room')->where('water_billing_payments.id', '=', $id)->first();
 
             $form_data = [
                 'transaction' => 1,
@@ -114,7 +121,7 @@ class WaterBillingPaymentController extends Controller
 
             Report::where('transaction', '=', 1)->where('billing_payment_id', '=', $id)->update($form_data);
 
-            return response()->json($this->renderMessage('Success', 'You have successfully updated this water billing payment.', $waterBillingPayment));
+            return response()->json($this->renderMessage('Success', 'You have successfully updated this water billing payment.', $updatedWaterBillingPayment));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -123,9 +130,6 @@ class WaterBillingPaymentController extends Controller
     public function destroy($id)
     {
         try {
-
-            $waterBillingPayment = WaterBillingPayment::findOrFail($id);
-
             $tenantBillingPayment = TenantBillingPayment::where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
 
             if ($tenantBillingPayment) return response()->json($this->renderMessage('Error', 'You cannot delete this billing because the tenant has already paid it.'), Response::HTTP_BAD_REQUEST);
@@ -138,7 +142,11 @@ class WaterBillingPaymentController extends Controller
                 $tenantBillingPayment->save();
             }
 
+            $waterBillingPayment = WaterBillingPayment::findOrFail($id);
             $waterBillingPayment->delete();
+
+            $reports = Report::where('billing_payment_id', '=', $id)->first();
+            $reports->delete();
 
             return response()->json($this->renderMessage('Success', 'You have successfully delete this water billing payment.', $waterBillingPayment));
         } catch (\Throwable $th) {
@@ -170,6 +178,9 @@ class WaterBillingPaymentController extends Controller
                     $tenantBillingPayment->save();
                 }
 
+                $reports = Report::where('billing_payment_id', '=', $waterBillingPayment->id)->first();
+                $reports->delete();
+
                 $waterBillingPayment->delete();
             }
 
@@ -188,8 +199,8 @@ class WaterBillingPaymentController extends Controller
             ]);
 
             $render_data = [
-                'waterBillingPayment' => DB::table('water_billing_payments')->join('tenants', 'water_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('water_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->whereBetween('date_issue', $request->dateFilter)->get(),
-                'tenants' => DB::table('tenants')->select('tenants.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS full_name"))->get(),
+                'waterBillingPayment' => DB::table('water_billing_payments')->join('rooms', 'water_billing_payments.room_id', '=', 'rooms.id')->select('water_billing_payments.*','rooms.room')->whereBetween('date_issue', $request->dateFilter)->get(),
+                'rooms' => DB::table('rooms')->get(),
             ];
 
             return response()->json($this->renderMessage('Success', 'You have successfully filter this billing payments.', $render_data));
