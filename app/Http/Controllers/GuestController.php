@@ -19,7 +19,7 @@ class GuestController extends Controller
     {
         $render_data = [
             'guests' => DB::table('guests')->join('rooms', 'guests.room_id', '=', 'rooms.id')->select('guests.*', DB::raw("CONCAT(guests.first_name, ' ', guests.middle_name, ' ', guests.last_name) AS full_name"), 'rooms.room')->get(),
-            'rooms' => DB::table('rooms')->orderBy('type')->get()
+            'rooms' => DB::table('rooms')->where('occupies', '=', 0)->orderBy('type')->get()
         ];
 
         return response()->json($render_data);
