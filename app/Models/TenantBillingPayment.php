@@ -9,7 +9,7 @@ class TenantBillingPayment extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'tenant_id',
+        'room_id',
         'water_billing_payment_id',
         'electricity_billing_payment_id',
     ];

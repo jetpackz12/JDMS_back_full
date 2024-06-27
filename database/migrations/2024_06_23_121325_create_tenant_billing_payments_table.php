@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tenant_billing_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id');
+            $table->foreignId('room_id');
             $table->foreignId('water_billing_payment_id')->nullable();
             $table->foreignId('electricity_billing_payment_id')->nullable();
             $table->integer('status')->default(1);
