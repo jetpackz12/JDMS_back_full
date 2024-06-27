@@ -43,9 +43,7 @@ class WaterBillingPaymentController extends Controller
 
             $existingBilling = WaterBillingPayment::where('tenant_id', '=', $request->tenant_id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
 
-            if ($existingBilling) {
-                return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
-            }
+            if ($existingBilling) return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
 
             $waterBillingPayment = WaterBillingPayment::create($form_data);
 
@@ -96,11 +94,13 @@ class WaterBillingPaymentController extends Controller
 
             $existingBilling = WaterBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('id', '!=', $id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
 
-            if ($existingBilling) {
-                return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
-            }
+            if ($existingBilling) return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
 
             $waterBillingPayment = WaterBillingPayment::findOrFail($id);
+
+            $tenantBillingPayment = TenantBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
+
+            if ($tenantBillingPayment) return response()->json($this->renderMessage('Error', 'You cannot update this billing because the tenant has already paid it.'), Response::HTTP_BAD_REQUEST);
 
             $waterBillingPayment = $waterBillingPayment->update($form_data);
 
@@ -126,7 +126,11 @@ class WaterBillingPaymentController extends Controller
 
             $waterBillingPayment = WaterBillingPayment::findOrFail($id);
 
-            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.water_billing_payment_id', '=', $id)->first();
+            $tenantBillingPayment = TenantBillingPayment::where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
+
+            if ($tenantBillingPayment) return response()->json($this->renderMessage('Error', 'You cannot delete this billing because the tenant has already paid it.'), Response::HTTP_BAD_REQUEST);
+
+            $tenantBillingPayment = TenantBillingPayment::where('water_billing_payment_id', '=', $id)->first();
 
             if ($tenantBillingPayment) {
 
@@ -149,6 +153,11 @@ class WaterBillingPaymentController extends Controller
             $request->validate([
                 'waterBillingIds' => 'required|array',
             ]);
+
+            $tenantBillingPayments = TenantBillingPayment::whereIn('water_billing_payment_id', $request->waterBillingIds)->get();
+            foreach ($tenantBillingPayments as $tenantBillingPayment) {
+                if ($tenantBillingPayment->status == 0) return response()->json($this->renderMessage('Error', 'You cannot delete this billings because some tenant has already paid it.'), Response::HTTP_BAD_REQUEST);
+             }
 
             $waterBillingPayments = WaterBillingPayment::whereIn('id', $request->waterBillingIds)->get();
             foreach ($waterBillingPayments as $waterBillingPayment) {
