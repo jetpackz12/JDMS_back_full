@@ -23,7 +23,7 @@ class WaterBillingPaymentController extends Controller
 
         $render_data = [
             'waterBillingPayment' => DB::table('water_billing_payments')->join('rooms', 'water_billing_payments.room_id', '=', 'rooms.id')->select('water_billing_payments.*','rooms.room')->whereMonth('date_issue', '=', $month)->get(),
-            'rooms' => DB::table('rooms')->get(),
+            'rooms' => DB::table('rooms')->where('availability', '=', 1)->get(),
         ];
 
         return response()->json($render_data);
@@ -145,7 +145,7 @@ class WaterBillingPaymentController extends Controller
             $waterBillingPayment = WaterBillingPayment::findOrFail($id);
             $waterBillingPayment->delete();
 
-            $reports = Report::where('billing_payment_id', '=', $id)->first();
+            $reports = Report::where('transaction', '=', 1)->where('billing_payment_id', '=', $id)->first();
             $reports->delete();
 
             return response()->json($this->renderMessage('Success', 'You have successfully delete this water billing payment.', $waterBillingPayment));
@@ -178,7 +178,7 @@ class WaterBillingPaymentController extends Controller
                     $tenantBillingPayment->save();
                 }
 
-                $reports = Report::where('billing_payment_id', '=', $waterBillingPayment->id)->first();
+                $reports = Report::where('transaction', '=', 1)->where('billing_payment_id', '=', $waterBillingPayment->id)->first();
                 $reports->delete();
 
                 $waterBillingPayment->delete();

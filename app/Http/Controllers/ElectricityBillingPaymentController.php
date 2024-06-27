@@ -18,8 +18,8 @@ class ElectricityBillingPaymentController extends Controller
         $month = Carbon::now()->format('m');
 
         $render_data = [
-            'electricityBillingPayment' => DB::table('electricity_billing_payments')->join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->whereMonth('date_issue', '=', $month)->get(),
-            'tenants' => DB::table('tenants')->select('tenants.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS full_name"))->get(),
+            'electricityBillingPayment' => DB::table('electricity_billing_payments')->join('rooms', 'electricity_billing_payments.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', 'rooms.room')->whereMonth('date_issue', '=', $month)->get(),
+            'rooms' => DB::table('rooms')->where('availability', '=', 1)->get(),
         ];
 
         return response()->json($render_data);
@@ -30,20 +30,23 @@ class ElectricityBillingPaymentController extends Controller
         try {
 
             $form_data = $request->validate([
-                'tenant_id' => 'required',
+                'room_id' => 'required',
                 'unit_con' => 'required',
                 'amount' => 'required',
                 'due_date' => 'required',
                 'date_issue' => 'required',
             ]);
 
-            $existingBilling = ElectricityBillingPayment::where('tenant_id', '=', $request->tenant_id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
+            $month = Carbon::parse($request->date_issue)->format('m');
+            $year = Carbon::parse($request->date_issue)->format('Y');
+
+            $existingBilling = ElectricityBillingPayment::where('room_id', '=', $request->room_id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
 
             if ($existingBilling) return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
 
             $electricityBillingPayment = ElectricityBillingPayment::create($form_data);
             
-            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.tenant_id', '=', $request->tenant_id)->where('tenant_billing_payments.electricity_billing_payment_id', '=', null)->first();
+            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.room_id', '=', $request->room_id)->where('tenant_billing_payments.electricity_billing_payment_id', '=', null)->first();
 
             if ($tenantBillingPayment) {
 
@@ -53,14 +56,14 @@ class ElectricityBillingPaymentController extends Controller
             } else {
 
                 $form_data = [
-                    'tenant_id' => $request->tenant_id,
+                    'room_id' => $request->room_id,
                     'electricity_billing_payment_id' => $electricityBillingPayment->id,
                 ];
     
                 TenantBillingPayment::create($form_data);
             }
 
-            $successElectricityBillingPayment = ElectricityBillingPayment::join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('electricity_billing_payments.id', '=', $electricityBillingPayment->id)->first();
+            $successElectricityBillingPayment = ElectricityBillingPayment::join('rooms', 'electricity_billing_payments.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', 'rooms.room')->where('electricity_billing_payments.id', '=', $electricityBillingPayment->id)->first();
 
             $form_data = [
                 'transaction' => 2,
@@ -81,26 +84,29 @@ class ElectricityBillingPaymentController extends Controller
         try {
 
             $form_data = $request->validate([
-                'tenant_id' => 'required',
+                'room_id' => 'required',
                 'unit_con' => 'required',
                 'amount' => 'required',
                 'due_date' => 'required',
                 'date_issue' => 'required',
             ]);
 
-            $existingBilling = ElectricityBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('id', '!=', $id)->whereMonth('date_issue', '=', $request->date_issue)->whereYear('date_issue', '=', $request->date_issue)->first();
+            $month = Carbon::parse($request->date_issue)->format('m');
+            $year = Carbon::parse($request->date_issue)->format('Y');
+
+            $existingBilling = ElectricityBillingPayment::where('room_id', '=', $request->room_id)->where('id', '!=', $id)->whereMonth('date_issue', '=', $month)->whereYear('date_issue', '=', $year)->first();
 
             if ($existingBilling) return response()->json($this->renderMessage('Error', 'You have already issued billing for this tenant'), Response::HTTP_BAD_REQUEST);
 
             $electricityBillingPayment = ElectricityBillingPayment::findOrFail($id);
 
-            $tenantBillingPayment = TenantBillingPayment::where('tenant_id', '=', $request->tenant_id)->where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
+            $tenantBillingPayment = TenantBillingPayment::where('room_id', '=', $request->room_id)->where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
 
             if ($tenantBillingPayment) return response()->json($this->renderMessage('Error', 'You cannot update this billing because the tenant has already paid it.'), Response::HTTP_BAD_REQUEST);
 
             $electricityBillingPayment = $electricityBillingPayment->update($form_data);
 
-            $updatedElectricityBillingPayment = ElectricityBillingPayment::join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->where('electricity_billing_payments.id', '=', $id)->first();
+            $updatedElectricityBillingPayment = ElectricityBillingPayment::join('rooms', 'electricity_billing_payments.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', 'rooms.room')->where('electricity_billing_payments.id', '=', $id)->first();
 
             $form_data = [
                 'transaction' => 2,
@@ -110,7 +116,7 @@ class ElectricityBillingPaymentController extends Controller
 
             Report::where('transaction', '=', 2)->where('billing_payment_id', '=', $id)->update($form_data);
 
-            return response()->json($this->renderMessage('Success', 'You have successfully updated this electricity billing payment.', $electricityBillingPayment));
+            return response()->json($this->renderMessage('Success', 'You have successfully updated this electricity billing payment.', $updatedElectricityBillingPayment));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -119,8 +125,6 @@ class ElectricityBillingPaymentController extends Controller
     public function destroy($id)
     {
         try {
-
-            $electricityBillingPayment = ElectricityBillingPayment::findOrFail($id);
 
             $tenantBillingPayment = TenantBillingPayment::where('water_billing_payment_id', '=', $id)->where('status', '=', 0)->first();
 
@@ -134,7 +138,11 @@ class ElectricityBillingPaymentController extends Controller
                 $tenantBillingPayment->save();
             }
 
+            $electricityBillingPayment = ElectricityBillingPayment::findOrFail($id);
             $electricityBillingPayment->delete();
+
+            $reports = Report::where('transaction', '=', 2)->where('billing_payment_id', '=', $id)->first();
+            $reports->delete();
 
             return response()->json($this->renderMessage('Success', 'You have successfully delete this electricity billing payment.', $electricityBillingPayment));
         } catch (\Throwable $th) {
@@ -166,6 +174,9 @@ class ElectricityBillingPaymentController extends Controller
                     $tenantBillingPayment->save();
                 }
 
+                $reports = Report::where('transaction', '=', 2)->where('billing_payment_id', '=', $waterBillingPayment->id)->first();
+                $reports->delete();
+
                 $waterBillingPayment->delete();
             }
 
@@ -184,8 +195,8 @@ class ElectricityBillingPaymentController extends Controller
             ]);
 
             $render_data = [
-                'electricityBillingPayment' => DB::table('electricity_billing_payments')->join('tenants', 'electricity_billing_payments.tenant_id', '=', 'tenants.id')->join('rooms', 'tenants.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS tenant"), 'rooms.room')->whereBetween('date_issue', $request->dateFilter)->get(),
-                'tenants' => DB::table('tenants')->select('tenants.*', DB::raw("CONCAT(tenants.first_name, ' ', tenants.middle_name, ' ', tenants.last_name) AS full_name"))->get(),
+                'electricityBillingPayment' => DB::table('electricity_billing_payments')->join('rooms', 'electricity_billing_payments.room_id', '=', 'rooms.id')->select('electricity_billing_payments.*', 'rooms.room')->whereBetween('date_issue', $request->dateFilter)->get(),
+                'rooms' => DB::table('rooms')->get(),
             ];
 
             return response()->json($this->renderMessage('Success', 'You have successfully filter this billing payments.', $render_data));

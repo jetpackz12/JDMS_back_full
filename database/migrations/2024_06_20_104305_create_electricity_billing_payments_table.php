@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('electricity_billing_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id');
+            $table->foreignId('room_id');
             $table->text('unit_con');
             $table->decimal('amount', 9, 2);
             $table->date('due_date');

@@ -10,7 +10,7 @@ class ElectricityBillingPayment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
+        'room_id',
         'unit_con',
         'amount',
         'due_date',
