@@ -116,6 +116,56 @@ class ElectricityBillingPaymentController extends Controller
         }
     }
 
+    public function destroy($id)
+    {
+        try {
+
+            $electricityBillingPayment = ElectricityBillingPayment::findOrFail($id);
+
+            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.electricity_billing_payment_id', '=', $id)->first();
+
+            if ($tenantBillingPayment) {
+
+                $tenantBillingPayment->electricity_billing_payment_id = null;
+                $tenantBillingPayment->save();
+            }
+
+            $electricityBillingPayment->delete();
+
+            return response()->json($this->renderMessage('Success', 'You have successfully delete this electricity billing payment.', $electricityBillingPayment));
+        } catch (\Throwable $th) {
+            return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function destroys(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'electricityBillingIds' => 'required|array',
+            ]);
+
+            $electricityBillingPayments = ElectricityBillingPayment::whereIn('id', $request->electricityBillingIds)->get();
+            foreach ($electricityBillingPayments as $waterBillingPayment) {
+
+                $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.electricity_billing_payment_id', '=', $waterBillingPayment->id)->first();
+
+                if ($tenantBillingPayment) {
+
+                    $tenantBillingPayment->electricity_billing_payment_id = null;
+                    $tenantBillingPayment->save();
+                }
+
+                $waterBillingPayment->delete();
+            }
+
+            return response()->json($this->renderMessage('Success', 'You have successfully delete this electricity billing payments.', $waterBillingPayment));
+        } catch (\Throwable $th) {
+            return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function dateFilter(Request $request)
     {
         try {

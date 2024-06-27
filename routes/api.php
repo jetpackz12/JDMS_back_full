@@ -100,6 +100,10 @@ Route::middleware('auth:sanctum')->prefix('v1/electricityBillingPayment')->group
     Route::post('/store', [ElectricityBillingPaymentController::class, 'store']);
     // Electricity Billing Payment Update Data
     Route::put('/update/{id}', [ElectricityBillingPaymentController::class, 'update']);
+    // Electricity Billing Payment Delete Data
+    Route::delete('/destroy/{id}', [ElectricityBillingPaymentController::class, 'destroy']);
+    // Electricity Billing Payment Delete Datas
+    Route::post('/destroys', [ElectricityBillingPaymentController::class, 'destroys']);
     // Electricity Billing Payment Date Filter
     Route::post('/dateFilter', [ElectricityBillingPaymentController::class, 'dateFilter']);
 });

@@ -164,7 +164,7 @@ class WaterBillingPaymentController extends Controller
                 $waterBillingPayment->delete();
             }
 
-            return response()->json($this->renderMessage('Success', 'You have successfully delete this water billing payment.', $waterBillingPayment));
+            return response()->json($this->renderMessage('Success', 'You have successfully delete this water billing payments.', $waterBillingPayment));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
