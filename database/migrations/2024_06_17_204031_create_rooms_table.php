@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description');
             $table->integer('capacity');
             $table->integer('type');
-            $table->decimal('price', 6, 2);
+            $table->decimal('price', 8, 2);
             $table->integer('status')->default(1);
             $table->integer('availability')->default(1);
             $table->timestamps();
