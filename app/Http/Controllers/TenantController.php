@@ -39,11 +39,20 @@ class TenantController extends Controller
                 'advance' => 'required',
             ]);
 
-            $tenant = Tenant::create($form_data);
+            $room = Room::findOrFail($request->room_id);
 
-            $room = Room::findOrFail($tenant->room_id);
-            $room->availability = self::ROOM_OCCUPIED;
-            $room->save();
+            if ($room->occupies >= $room->capacity) {
+                return response()->json($this->renderMessage('Error', 'You cannot asign a tenant on this room. This room is already full.'));
+            } else {
+                $tenant = Tenant::create($form_data);
+                $room->occupies = $room->occupies + 1;
+                $room->save();
+
+                if ($room->occupies === $room->capacity) {
+                    $room->availability = self::ROOM_OCCUPIED;
+                    $room->save();
+                }
+            }
 
             return response()->json($this->renderMessage('Success', 'You have successfully added new tenant.', $tenant));
         } catch (\Throwable $th) {
@@ -65,15 +74,31 @@ class TenantController extends Controller
                 'advance' => 'required',
             ]);
 
+            $select_room = Room::findOrFail($request->room_id);
+
+            if ($select_room->occupies >= $select_room->capacity) return response()->json($this->renderMessage('Error', 'You cannot asign a tenant on this room. This room is already full.'));
+
             $tenant = Tenant::findOrFail($id);
 
-            $room = Room::findOrFail($tenant->room_id);
-            $room->availability = self::ROOM_VACANT;
-            $room->save();
+            $current_room = Room::findOrFail($tenant->room_id);
 
-            $room = Room::findOrFail($request->room_id);
-            $room->availability = self::ROOM_OCCUPIED;
-            $room->save();
+            if ($current_room->availability === self::ROOM_OCCUPIED) {
+                $current_room->availability = self::ROOM_VACANT;
+                $current_room->save();
+            }
+
+            if ($current_room->occupies > 0) {
+                $current_room->occupies = $current_room->occupies - 1;
+                $current_room->save();
+            }
+
+            $select_room->occupies = $select_room->occupies + 1;
+            $select_room->save();
+
+            if ($select_room->occupies === $select_room->capacity) {
+                $select_room->availability = self::ROOM_OCCUPIED;
+                $select_room->save();
+            }
 
             $tenant->update($form_data);
 
@@ -88,12 +113,21 @@ class TenantController extends Controller
         try {
 
             $tenant = Tenant::findOrFail($id);
-            $tenant->status = self::DISABLE;
-            $tenant->save();
 
             $room = Room::findOrFail($tenant->room_id);
-            $room->availability = self::ENABLED;
-            $room->save();
+
+            if ($room->availability === self::ROOM_OCCUPIED) {
+                $room->availability = self::ROOM_VACANT;
+                $room->save();
+            }
+
+            if ($room->occupies > 0) {
+                $room->occupies = $room->occupies - 1;
+                $room->save();
+            }
+
+            $tenant->status = self::DISABLE;
+            $tenant->save();
 
             return response()->json($this->renderMessage('Success', 'You have successfully delete this tenant.', $tenant));
         } catch (\Throwable $th) {
@@ -111,14 +145,21 @@ class TenantController extends Controller
 
             $tenants = Tenant::whereIn('id', $request->tenantIds)->get();
             foreach ($tenants as $tenant) {
-                $tenant->status = self::DISABLE;
-                $tenant->save();
 
-                $room = Room::find($tenant->room_id);
-                if ($room) {
-                    $room->availability = self::ENABLED;
+                $room = Room::findOrFail($tenant->room_id);
+
+                if ($room->availability === self::ROOM_OCCUPIED) {
+                    $room->availability = self::ROOM_VACANT;
                     $room->save();
                 }
+
+                if ($room->occupies > 0) {
+                    $room->occupies = $room->occupies - 1;
+                    $room->save();
+                }
+
+                $tenant->status = self::DISABLE;
+                $tenant->save();
             }
 
             return response()->json($this->renderMessage('Success', 'You have successfully delete this tenants.', $tenant));
