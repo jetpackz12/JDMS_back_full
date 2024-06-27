@@ -13,6 +13,7 @@ class Room extends Model
         'image',
         'room',
         'description',
+        'occupies',
         'capacity',
         'type',
         'price',

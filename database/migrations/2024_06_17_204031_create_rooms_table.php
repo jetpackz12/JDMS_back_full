@@ -16,6 +16,7 @@ return new class extends Migration
             $table->text('image');
             $table->string('room');
             $table->text('description');
+            $table->integer('occupies')->default(0);
             $table->integer('capacity');
             $table->integer('type');
             $table->decimal('price', 8, 2);
