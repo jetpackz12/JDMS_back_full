@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 class WaterBillingPaymentController extends Controller
 {
+    const DISABLE = 0;
+    const ENABLED = 1;
 
     public function index()
     {
@@ -46,21 +48,20 @@ class WaterBillingPaymentController extends Controller
             }
 
             $waterBillingPayment = WaterBillingPayment::create($form_data);
-            
+
             $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.tenant_id', '=', $request->tenant_id)->where('tenant_billing_payments.water_billing_payment_id', '=', null)->first();
 
             if ($tenantBillingPayment) {
 
                 $tenantBillingPayment->water_billing_payment_id = $waterBillingPayment->id;
                 $tenantBillingPayment->save();
-                
             } else {
 
                 $form_data = [
                     'tenant_id' => $request->tenant_id,
                     'water_billing_payment_id' => $waterBillingPayment->id,
                 ];
-    
+
                 TenantBillingPayment::create($form_data);
             }
 
@@ -114,6 +115,56 @@ class WaterBillingPaymentController extends Controller
             Report::where('transaction', '=', 1)->where('billing_payment_id', '=', $id)->update($form_data);
 
             return response()->json($this->renderMessage('Success', 'You have successfully updated this water billing payment.', $waterBillingPayment));
+        } catch (\Throwable $th) {
+            return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+
+            $waterBillingPayment = WaterBillingPayment::findOrFail($id);
+
+            $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.water_billing_payment_id', '=', $id)->first();
+
+            if ($tenantBillingPayment) {
+
+                $tenantBillingPayment->water_billing_payment_id = null;
+                $tenantBillingPayment->save();
+            }
+
+            $waterBillingPayment->delete();
+
+            return response()->json($this->renderMessage('Success', 'You have successfully delete this water billing payment.', $waterBillingPayment));
+        } catch (\Throwable $th) {
+            return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function destroys(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'waterBillingIds' => 'required|array',
+            ]);
+
+            $waterBillingPayments = WaterBillingPayment::whereIn('id', $request->waterBillingIds)->get();
+            foreach ($waterBillingPayments as $waterBillingPayment) {
+
+                $tenantBillingPayment = TenantBillingPayment::where('tenant_billing_payments.water_billing_payment_id', '=', $waterBillingPayment->id)->first();
+
+                if ($tenantBillingPayment) {
+
+                    $tenantBillingPayment->water_billing_payment_id = null;
+                    $tenantBillingPayment->save();
+                }
+
+                $waterBillingPayment->delete();
+            }
+
+            return response()->json($this->renderMessage('Success', 'You have successfully delete this water billing payment.', $waterBillingPayment));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }

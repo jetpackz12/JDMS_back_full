@@ -84,6 +84,10 @@ Route::middleware('auth:sanctum')->prefix('v1/waterBillingPayment')->group(funct
     Route::post('/store', [WaterBillingPaymentController::class, 'store']);
     // Water Billing Payment Update Data
     Route::put('/update/{id}', [WaterBillingPaymentController::class, 'update']);
+    // Water Billing Payment Delete Data
+    Route::delete('/destroy/{id}', [WaterBillingPaymentController::class, 'destroy']);
+    // Water Billing Payment Delete Datas
+    Route::post('/destroys', [WaterBillingPaymentController::class, 'destroys']);
     // Water Billing Payment Date Filter
     Route::post('/dateFilter', [WaterBillingPaymentController::class, 'dateFilter']);
 });
