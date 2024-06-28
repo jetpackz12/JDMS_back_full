@@ -11,6 +11,8 @@ class TenantBillingPayment extends Model
     protected $fillable = [
         'room_id',
         'water_billing_payment_id',
+        'water_billing_date_issue',
         'electricity_billing_payment_id',
+        'electricity_billing_date_issue',
     ];
 }

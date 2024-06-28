@@ -42,7 +42,7 @@ class TenantController extends Controller
             $room = Room::findOrFail($request->room_id);
 
             if ($room->occupies >= $room->capacity) {
-                return response()->json($this->renderMessage('Error', 'You cannot asign a tenant on this room. This room is already full.'));
+                return response()->json($this->renderMessage('Error', 'You cannot asign a tenant on this room. This room is already full.'), Response::HTTP_BAD_REQUEST);
             } else {
                 $tenant = Tenant::create($form_data);
                 $room->occupies = $room->occupies + 1;
@@ -74,11 +74,11 @@ class TenantController extends Controller
                 'advance' => 'required',
             ]);
 
+            $tenant = Tenant::findOrFail($id);
+
             $select_room = Room::findOrFail($request->room_id);
 
-            if ($select_room->occupies >= $select_room->capacity) return response()->json($this->renderMessage('Error', 'You cannot asign a tenant on this room. This room is already full.'));
-
-            $tenant = Tenant::findOrFail($id);
+            if ($tenant->room_id !== $request->room_id && $select_room->occupies >= $select_room->capacity) return response()->json($this->renderMessage('Error', 'You cannot asign a tenant on this room. This room is already full.'), Response::HTTP_BAD_REQUEST);
 
             $current_room = Room::findOrFail($tenant->room_id);
 

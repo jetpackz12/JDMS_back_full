@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('room_id');
             $table->foreignId('water_billing_payment_id')->nullable();
+            $table->date('water_billing_date_issue')->nullable();
             $table->foreignId('electricity_billing_payment_id')->nullable();
+            $table->date('electricity_billing_date_issue')->nullable();
             $table->integer('status')->default(1);
             $table->timestamps();
         });
