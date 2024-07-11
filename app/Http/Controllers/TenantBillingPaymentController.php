@@ -35,11 +35,11 @@ class TenantBillingPaymentController extends Controller
 
         try {
 
-            $tenantBillingPayment = TenantBillingPayment::findOrFail($id);
-            $tenantBillingPayment->status = self::PAID;
-            $tenantBillingPayment->save();
+            $tenant_billing_payment = TenantBillingPayment::findOrFail($id);
+            $tenant_billing_payment->status = self::PAID;
+            $tenant_billing_payment->save();
 
-            return response()->json($this->renderMessage('Success', 'You have successfully updated this tenant billing status.', $tenantBillingPayment));
+            return response()->json($this->renderMessage('Success', 'You have successfully updated this tenant billing status.', $tenant_billing_payment));
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }

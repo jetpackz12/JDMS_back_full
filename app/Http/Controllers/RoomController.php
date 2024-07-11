@@ -89,10 +89,10 @@ class RoomController extends Controller
             ]);
 
             $image = $request->file('image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('storage/room-images'), $imageName);
+            $image_name = time() . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('storage/room-images'), $image_name);
 
-            return response()->json($imageName);
+            return response()->json($image_name);
         } catch (\Throwable $th) {
             return response()->json($this->renderMessage('Error', 'An error occurred: ' . $th->getMessage()), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
